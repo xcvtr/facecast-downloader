@@ -11,7 +11,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "facecast-dl=src.cli:main",
+            "facecast-dl=src.download:main",
         ],
     },
     python_requires=">=3.8",

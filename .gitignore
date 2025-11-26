@@ -146,4 +146,16 @@ bundle.js
 *.mp4
 *.ts
 *.m3u8
-videos
+videos/
+
+# Chat extraction results
+*_chat.txt
+*_chat.json
+*_chat.html
+*_chat_widget.html
+*_chat_raw.txt
+opendemo_*.html
+opendemo_*.png
+chat_screenshot_*.png
+chat_page_*.html
+page_*.html

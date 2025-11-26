@@ -30,8 +30,10 @@ class VideoMetadataExtractor:
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'application/json'
         })
+        self.event_id = None  # Сохраняем event_id для использования в других модулях
     
     def extract_stream_url(self, video_id: str, code: Optional[str] = None) -> VideoInfo:
         """
@@ -104,6 +106,7 @@ class VideoMetadataExtractor:
                 
                 # Извлекаем event_id (это поле 'id' в TEMPLATE_EVENT_DATA)
                 event_id = event_data.get('id')
+                self.event_id = event_id  # Сохраняем для использования в других модулях
                 
                 if event_id and servers:
                     # Выбираем первый доступный CDN сервер
@@ -161,3 +164,35 @@ class VideoMetadataExtractor:
         if '.m3u8' in stream_url.lower():
             return 'm3u8'
         return 'direct'
+    
+    def get_event_id(self, video_id: str, code: Optional[str] = None) -> Optional[str]:
+        """
+        Получает event_id для video_id через страницу или API
+        
+        Args:
+            video_id: Идентификатор видео из URL
+            code: Опциональный код доступа
+            
+        Returns:
+            event_id или None если не найден
+        """
+        # Сначала пробуем получить через страницу
+        url = f"{self.BASE_URL}/w/{video_id}"
+        if code:
+            url += f"?key={code}"
+        
+        try:
+            response = self.session.get(url, timeout=self.TIMEOUT)
+            response.raise_for_status()
+            html_content = response.text
+            
+            # Ищем TEMPLATE_EVENT_DATA
+            event_data_match = re.search(r'var TEMPLATE_EVENT_DATA = JSON\.parse\(\'({[^\']+})\'\);', html_content)
+            if event_data_match:
+                event_data_str = event_data_match.group(1).replace('\\', '')
+                event_data = json.loads(event_data_str)
+                return event_data.get('id')
+        except Exception:
+            pass
+        
+        return None
