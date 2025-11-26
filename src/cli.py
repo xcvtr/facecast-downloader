@@ -14,20 +14,21 @@ from .file_manager import FileManager
 def main():
     """Главная функция CLI"""
     parser = argparse.ArgumentParser(
-        description='Скачивание видео с facecast.net',
+        description='Скачивание видео с facecast.net и opendemo.ru',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Примеры использования:
   %(prog)s https://facecast.net/w/311ty3
-  %(prog)s https://facecast.net/w/311ty3 -o ./videos
-  %(prog)s https://facecast.net/w/311ty3 -o ./videos -f video.mp4
-  %(prog)s https://facecast.net/w/311ty3 -w 10  # 10 параллельных потоков
+  %(prog)s https://opendemo.ru/live?id=zfvfh8&code=1
+  %(prog)s https://opendemo.ru/live?id=zfvfh8&code=1 -o ./videos
+  %(prog)s https://opendemo.ru/live?id=zfvfh8&code=1 -o ./videos -f video.mp4
+  %(prog)s https://opendemo.ru/live?id=zfvfh8&code=1 -w 10  # 10 параллельных потоков
         """
     )
     
     parser.add_argument(
         'url',
-        help='URL видео на facecast.net (например: https://facecast.net/w/311ty3)'
+        help='URL видео на facecast.net или opendemo.ru (например: https://facecast.net/w/311ty3 или https://opendemo.ru/live?id=zfvfh8&code=1)'
     )
     
     parser.add_argument(
@@ -99,8 +100,10 @@ def download_video(url: str, output_dir: str = '.', filename: str = None, worker
     print("\n[1/5] Парсинг URL...")
     try:
         url_parser = URLParser()
-        video_id = url_parser.parse(url)
+        video_id, code = url_parser.parse(url)
         print(f"✓ Video ID: {video_id}")
+        if code:
+            print(f"✓ Access Code: {code}")
     except URLParseError as e:
         return DownloadResult(
             success=False,
@@ -112,7 +115,7 @@ def download_video(url: str, output_dir: str = '.', filename: str = None, worker
     print("\n[2/5] Получение метаданных видео...")
     try:
         extractor = VideoMetadataExtractor()
-        video_info = extractor.extract_stream_url(video_id)
+        video_info = extractor.extract_stream_url(video_id, code)
         print(f"✓ Найден видеопоток: {video_info.stream_type}")
         print(f"  URL: {video_info.stream_url[:80]}...")
     except MetadataExtractionError as e:

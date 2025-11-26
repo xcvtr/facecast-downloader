@@ -33,12 +33,13 @@ class VideoMetadataExtractor:
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         })
     
-    def extract_stream_url(self, video_id: str) -> VideoInfo:
+    def extract_stream_url(self, video_id: str, code: Optional[str] = None) -> VideoInfo:
         """
         Получает HTML-страницу и извлекает URL видеопотока
         
         Args:
             video_id: Идентификатор видео
+            code: Опциональный код доступа (для защищенных видео)
             
         Returns:
             VideoInfo: Информация о видеопотоке
@@ -47,6 +48,8 @@ class VideoMetadataExtractor:
             MetadataExtractionError: Если не удалось извлечь URL потока
         """
         url = f"{self.BASE_URL}/w/{video_id}"
+        if code:
+            url += f"?key={code}"
         
         try:
             response = self.session.get(url, timeout=self.TIMEOUT)
